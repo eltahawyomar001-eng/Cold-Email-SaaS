@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Send, Mail, Lock, ArrowRight, Sparkles, Play } from 'lucide-react';
 
 function LoginForm() {
     const router = useRouter();
@@ -17,6 +17,7 @@ function LoginForm() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isDemoLoading, setIsDemoLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,9 +43,12 @@ function LoginForm() {
         }
     };
 
-    const fillDemoCredentials = () => {
-        setEmail('demo@example.com');
-        setPassword('password123');
+    const enterDemoMode = () => {
+        setIsDemoLoading(true);
+        // Set demo mode cookie
+        document.cookie = 'demo_mode=true; path=/; max-age=86400'; // 24 hours
+        // Navigate to app
+        router.push('/app');
     };
 
     return (
@@ -62,21 +66,35 @@ function LoginForm() {
                 <p className="text-slate-500">Sign in to your account to continue</p>
             </div>
 
-            {/* Demo Banner */}
+            {/* Demo Mode Banner */}
             <button
-                onClick={fillDemoCredentials}
-                className="w-full mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-violet-50 border border-blue-100 hover:border-blue-200 transition-colors group"
+                onClick={enterDemoMode}
+                disabled={isDemoLoading}
+                className="w-full mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-500 to-violet-600 text-white hover:shadow-lg hover:shadow-blue-500/25 transition-all hover:-translate-y-0.5 disabled:opacity-75"
             >
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-blue-100">
-                        <Sparkles className="h-4 w-4 text-blue-600" />
+                <div className="flex items-center justify-center gap-3">
+                    <div className="p-2 rounded-xl bg-white/20">
+                        {isDemoLoading ? (
+                            <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <Play className="h-5 w-5" fill="white" />
+                        )}
                     </div>
                     <div className="text-left">
-                        <p className="text-sm font-medium text-slate-900">Demo Mode</p>
-                        <p className="text-xs text-slate-500">Click to fill demo credentials</p>
+                        <p className="font-semibold">Enter Demo Mode</p>
+                        <p className="text-sm text-white/80">Preview the full dashboard instantly</p>
                     </div>
                 </div>
             </button>
+
+            <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                    <span className="bg-white px-4 text-slate-500">or sign in with email</span>
+                </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
@@ -115,7 +133,7 @@ function LoginForm() {
                     </Link>
                 </div>
 
-                <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
+                <Button type="submit" variant="outline" className="w-full" size="lg" isLoading={isLoading}>
                     Sign In
                     <ArrowRight className="h-4 w-4" />
                 </Button>
