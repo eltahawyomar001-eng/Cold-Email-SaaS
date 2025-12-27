@@ -208,13 +208,13 @@ export default function BillingPage() {
                     <div>
                         <p className="font-medium text-surface-900">What happens when I reach my limits?</p>
                         <p className="text-sm text-surface-600 mt-1">
-                            You'll receive a notification when approaching limits. You can upgrade anytime to continue.
+                            You&apos;ll receive a notification when approaching limits. You can upgrade anytime to continue.
                         </p>
                     </div>
                     <div>
                         <p className="font-medium text-surface-900">Is there a free trial?</p>
                         <p className="text-sm text-surface-600 mt-1">
-                            The Free plan is always free! Try it out and upgrade when you're ready.
+                            The Free plan is always free! Try it out and upgrade when you&apos;re ready.
                         </p>
                     </div>
                 </CardContent>

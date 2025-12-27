@@ -16,13 +16,14 @@ import Link from 'next/link';
 export default async function InvitePage({
     params,
 }: {
-    params: { token: string };
+    params: Promise<{ token: string }>;
 }) {
+    const { token } = await params;
     const session = await getServerSession(authOptions);
 
     // Find the invite
     const invite = await prisma.invite.findUnique({
-        where: { token: params.token },
+        where: { token },
         include: {
             workspace: true,
         },
@@ -76,14 +77,14 @@ export default async function InvitePage({
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 mx-auto mb-4">
                         <Send className="h-6 w-6 text-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-surface-900">You're Invited!</h1>
+                    <h1 className="text-2xl font-bold text-surface-900">You&apos;re Invited!</h1>
                 </div>
 
                 <Card>
                     <CardHeader className="text-center">
                         <CardTitle>Join {invite.workspace.name}</CardTitle>
                         <CardDescription>
-                            You've been invited to join as a <span className="font-medium">{invite.role.toLowerCase()}</span>
+                            You&apos;ve been invited to join as a <span className="font-medium">{invite.role.toLowerCase()}</span>
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -92,12 +93,12 @@ export default async function InvitePage({
                         </p>
 
                         <div className="space-y-2">
-                            <Link href={`/login?callbackUrl=/invite/${params.token}`} className="block">
+                            <Link href={`/login?callbackUrl=/invite/${token}`} className="block">
                                 <Button className="w-full">
                                     Sign In to Accept
                                 </Button>
                             </Link>
-                            <Link href={`/register?email=${encodeURIComponent(invite.email)}&callbackUrl=/invite/${params.token}`} className="block">
+                            <Link href={`/register?email=${encodeURIComponent(invite.email)}&callbackUrl=/invite/${token}`} className="block">
                                 <Button variant="outline" className="w-full">
                                     Create Account
                                 </Button>

@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { Send, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get('callbackUrl') || '/app';
@@ -48,6 +47,91 @@ export default function LoginPage() {
         setPassword('password123');
     };
 
+    return (
+        <div className="w-full max-w-md">
+            {/* Mobile Logo */}
+            <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg shadow-blue-500/25">
+                    <Send className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-slate-900">ColdReach</span>
+            </div>
+
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h2>
+                <p className="text-slate-500">Sign in to your account to continue</p>
+            </div>
+
+            {/* Demo Banner */}
+            <button
+                onClick={fillDemoCredentials}
+                className="w-full mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-violet-50 border border-blue-100 hover:border-blue-200 transition-colors group"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-blue-100">
+                        <Sparkles className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                        <p className="text-sm font-medium text-slate-900">Demo Mode</p>
+                        <p className="text-xs text-slate-500">Click to fill demo credentials</p>
+                    </div>
+                </div>
+            </button>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {error && (
+                    <div className="p-4 rounded-2xl bg-red-50 border border-red-100">
+                        <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                )}
+
+                <Input
+                    type="email"
+                    label="Email"
+                    placeholder="you@company.com"
+                    icon={<Mail className="h-4 w-4" />}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+
+                <Input
+                    type="password"
+                    label="Password"
+                    placeholder="••••••••"
+                    icon={<Lock className="h-4 w-4" />}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+
+                <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                        <span className="text-sm text-slate-600">Remember me</span>
+                    </label>
+                    <Link href="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                        Forgot password?
+                    </Link>
+                </div>
+
+                <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
+                    Sign In
+                    <ArrowRight className="h-4 w-4" />
+                </Button>
+            </form>
+
+            <p className="mt-8 text-center text-sm text-slate-500">
+                Don&apos;t have an account?{' '}
+                <Link href="/register" className="font-medium text-blue-600 hover:text-blue-700">
+                    Sign up for free
+                </Link>
+            </p>
+        </div>
+    );
+}
+
+export default function LoginPage() {
     return (
         <div className="min-h-screen flex relative overflow-hidden">
             {/* Background decoration */}
@@ -101,86 +185,9 @@ export default function LoginPage() {
 
             {/* Right Panel - Form */}
             <div className="flex-1 flex items-center justify-center p-8 bg-white relative">
-                <div className="w-full max-w-md">
-                    {/* Mobile Logo */}
-                    <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg shadow-blue-500/25">
-                            <Send className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="text-xl font-bold text-slate-900">ColdReach</span>
-                    </div>
-
-                    <div className="text-center mb-8">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h2>
-                        <p className="text-slate-500">Sign in to your account to continue</p>
-                    </div>
-
-                    {/* Demo Banner */}
-                    <button
-                        onClick={fillDemoCredentials}
-                        className="w-full mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-violet-50 border border-blue-100 hover:border-blue-200 transition-colors group"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-blue-100">
-                                <Sparkles className="h-4 w-4 text-blue-600" />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-sm font-medium text-slate-900">Demo Mode</p>
-                                <p className="text-xs text-slate-500">Click to fill demo credentials</p>
-                            </div>
-                        </div>
-                    </button>
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {error && (
-                            <div className="p-4 rounded-2xl bg-red-50 border border-red-100">
-                                <p className="text-sm text-red-600">{error}</p>
-                            </div>
-                        )}
-
-                        <Input
-                            type="email"
-                            label="Email"
-                            placeholder="you@company.com"
-                            icon={<Mail className="h-4 w-4" />}
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-
-                        <Input
-                            type="password"
-                            label="Password"
-                            placeholder="••••••••"
-                            icon={<Lock className="h-4 w-4" />}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                                <span className="text-sm text-slate-600">Remember me</span>
-                            </label>
-                            <Link href="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                                Forgot password?
-                            </Link>
-                        </div>
-
-                        <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-                            Sign In
-                            <ArrowRight className="h-4 w-4" />
-                        </Button>
-                    </form>
-
-                    <p className="mt-8 text-center text-sm text-slate-500">
-                        Don't have an account?{' '}
-                        <Link href="/register" className="font-medium text-blue-600 hover:text-blue-700">
-                            Sign up for free
-                        </Link>
-                    </p>
-                </div>
+                <Suspense fallback={<div className="animate-pulse">Loading...</div>}>
+                    <LoginForm />
+                </Suspense>
             </div>
         </div>
     );

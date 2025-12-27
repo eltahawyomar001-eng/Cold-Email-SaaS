@@ -243,7 +243,7 @@ export default function LandingPage() {
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-slate-900">John Doe</p>
-                                        <p className="text-xs text-emerald-600">Interested! Let's talk...</p>
+                                        <p className="text-xs text-emerald-600">Interested! Let&apos;s talk...</p>
                                     </div>
                                 </div>
                             </div>
@@ -382,7 +382,7 @@ export default function LandingPage() {
 
                                 <div className="mb-4">
                                     <div className="flex justify-between text-sm mb-2">
-                                        <span className="text-slate-600">Today's Progress</span>
+                                        <span className="text-slate-600">Today&apos;s Progress</span>
                                         <span className="font-medium text-slate-900">28 / 35</span>
                                     </div>
                                     <div className="h-3 bg-slate-100 rounded-full overflow-hidden">

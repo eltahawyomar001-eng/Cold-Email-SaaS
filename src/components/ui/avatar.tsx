@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 
 interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -14,6 +15,12 @@ const sizeClasses = {
     sm: 'h-8 w-8 text-xs',
     md: 'h-10 w-10 text-sm',
     lg: 'h-12 w-12 text-base',
+};
+
+const sizePx = {
+    sm: 32,
+    md: 40,
+    lg: 48,
 };
 
 function Avatar({ className, src, alt, name, size = 'md', ...props }: AvatarProps) {
@@ -35,9 +42,11 @@ function Avatar({ className, src, alt, name, size = 'md', ...props }: AvatarProp
             {...props}
         >
             {!showFallback ? (
-                <img
+                <Image
                     src={src}
                     alt={alt || name || 'Avatar'}
+                    width={sizePx[size]}
+                    height={sizePx[size]}
                     className="h-full w-full object-cover"
                     onError={() => setImgError(true)}
                 />

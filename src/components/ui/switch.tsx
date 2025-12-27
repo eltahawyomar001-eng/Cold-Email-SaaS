@@ -20,7 +20,8 @@ function Switch({
     id,
     className,
 }: SwitchProps) {
-    const switchId = id || React.useId();
+    const generatedId = React.useId();
+    const switchId = id || generatedId;
 
     return (
         <div className={cn('flex items-center space-x-2', className)}>

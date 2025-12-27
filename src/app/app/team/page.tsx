@@ -115,7 +115,7 @@ export default async function TeamPage() {
                     <CardHeader>
                         <CardTitle>Pending Invitations</CardTitle>
                         <CardDescription>
-                            People who have been invited but haven't joined yet
+                            People who have been invited but haven&apos;t joined yet
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">

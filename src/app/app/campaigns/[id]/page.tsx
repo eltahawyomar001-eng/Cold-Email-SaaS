@@ -27,13 +27,14 @@ import Link from 'next/link';
 export default async function CampaignDetailPage({
     params,
 }: {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }) {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user) return null;
 
     const campaign = await prisma.campaign.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: {
             emailAccount: true,
             steps: { orderBy: { order: 'asc' } },

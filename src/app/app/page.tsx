@@ -125,7 +125,7 @@ export default function DashboardPage() {
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
                     <p className="text-slate-500 mt-1">
-                        Welcome back! Here's what's happening with your campaigns.
+                        Welcome back! Here&apos;s what&apos;s happening with your campaigns.
                     </p>
                 </div>
                 <Link href="/app/campaigns/new">

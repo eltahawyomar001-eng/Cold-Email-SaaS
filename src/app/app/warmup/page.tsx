@@ -172,7 +172,7 @@ function WarmupAccountCard({
                     <div className="space-y-4">
                         <div>
                             <div className="flex items-center justify-between text-sm mb-2">
-                                <span className="text-surface-500">Today's Progress</span>
+                                <span className="text-surface-500">Today&apos;s Progress</span>
                                 <span className="font-medium text-surface-900">
                                     {settings.sentToday} / {settings.dailyTarget}
                                 </span>

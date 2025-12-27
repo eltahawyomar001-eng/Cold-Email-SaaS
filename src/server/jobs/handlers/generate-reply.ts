@@ -72,17 +72,18 @@ export async function processGenerateReply(
 
     const { campaign, lead } = campaignLead;
     const step = campaign.steps[0];
+    const emailAccount = campaign.emailAccount!;
 
     // Create the reply
     await createSimulatedReply(
         campaign.workspaceId,
-        campaign.emailAccount.id,
+        emailAccount.id,
         campaign.id,
         campaign.name,
         lead.email,
         lead.firstName || lead.company || null,
-        campaign.emailAccount.email,
-        campaign.emailAccount.name,
+        emailAccount.email,
+        emailAccount.name,
         step?.subject || 'Your email',
         category
     );

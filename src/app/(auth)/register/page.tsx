@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -8,7 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, User, Mail, Lock, ArrowRight, Check } from 'lucide-react';
 
-export default function RegisterPage() {
+const features = [
+    'Unlimited email accounts',
+    'Smart warm-up system',
+    'AI-powered sequences',
+    'Real-time analytics',
+    'Team collaboration',
+];
+
+function RegisterForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get('callbackUrl') || '/app';
@@ -20,6 +28,12 @@ export default function RegisterPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (prefillEmail) {
+            setEmail(prefillEmail);
+        }
+    }, [prefillEmail]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -68,14 +82,92 @@ export default function RegisterPage() {
         }
     };
 
-    const features = [
-        'Unlimited email accounts',
-        'Smart warm-up system',
-        'AI-powered sequences',
-        'Real-time analytics',
-        'Team collaboration',
-    ];
+    return (
+        <div className="w-full max-w-md">
+            {/* Mobile Logo */}
+            <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg shadow-blue-500/25">
+                    <Send className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-slate-900">ColdReach</span>
+            </div>
 
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-slate-900 mb-2">Create your account</h2>
+                <p className="text-slate-500">Start your 14-day free trial</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {error && (
+                    <div className="p-4 rounded-2xl bg-red-50 border border-red-100">
+                        <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                )}
+
+                <Input
+                    type="text"
+                    label="Full Name"
+                    placeholder="John Doe"
+                    icon={<User className="h-4 w-4" />}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                />
+
+                <Input
+                    type="email"
+                    label="Email"
+                    placeholder="you@company.com"
+                    icon={<Mail className="h-4 w-4" />}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+
+                <Input
+                    type="password"
+                    label="Password"
+                    placeholder="Min 8 characters"
+                    icon={<Lock className="h-4 w-4" />}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+
+                <Input
+                    type="password"
+                    label="Confirm Password"
+                    placeholder="••••••••"
+                    icon={<Lock className="h-4 w-4" />}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                />
+
+                <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
+                    Create Account
+                    <ArrowRight className="h-4 w-4" />
+                </Button>
+
+                <p className="text-xs text-center text-slate-500">
+                    By creating an account, you agree to our{' '}
+                    <Link href="#" className="text-blue-600 hover:underline">Terms</Link>
+                    {' '}and{' '}
+                    <Link href="#" className="text-blue-600 hover:underline">Privacy Policy</Link>
+                </p>
+            </form>
+
+            <p className="mt-8 text-center text-sm text-slate-500">
+                Already have an account?{' '}
+                <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700">
+                    Sign in
+                </Link>
+            </p>
+        </div>
+    );
+}
+
+export default function RegisterPage() {
     return (
         <div className="min-h-screen flex relative overflow-hidden">
             {/* Background decoration */}
@@ -84,87 +176,9 @@ export default function RegisterPage() {
 
             {/* Left Panel - Form */}
             <div className="flex-1 flex items-center justify-center p-8 bg-white relative">
-                <div className="w-full max-w-md">
-                    {/* Mobile Logo */}
-                    <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg shadow-blue-500/25">
-                            <Send className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="text-xl font-bold text-slate-900">ColdReach</span>
-                    </div>
-
-                    <div className="text-center mb-8">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-2">Create your account</h2>
-                        <p className="text-slate-500">Start your 14-day free trial</p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {error && (
-                            <div className="p-4 rounded-2xl bg-red-50 border border-red-100">
-                                <p className="text-sm text-red-600">{error}</p>
-                            </div>
-                        )}
-
-                        <Input
-                            type="text"
-                            label="Full Name"
-                            placeholder="John Doe"
-                            icon={<User className="h-4 w-4" />}
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                        />
-
-                        <Input
-                            type="email"
-                            label="Email"
-                            placeholder="you@company.com"
-                            icon={<Mail className="h-4 w-4" />}
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-
-                        <Input
-                            type="password"
-                            label="Password"
-                            placeholder="Min 8 characters"
-                            icon={<Lock className="h-4 w-4" />}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-
-                        <Input
-                            type="password"
-                            label="Confirm Password"
-                            placeholder="••••••••"
-                            icon={<Lock className="h-4 w-4" />}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                        />
-
-                        <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-                            Create Account
-                            <ArrowRight className="h-4 w-4" />
-                        </Button>
-
-                        <p className="text-xs text-center text-slate-500">
-                            By creating an account, you agree to our{' '}
-                            <Link href="#" className="text-blue-600 hover:underline">Terms</Link>
-                            {' '}and{' '}
-                            <Link href="#" className="text-blue-600 hover:underline">Privacy Policy</Link>
-                        </p>
-                    </form>
-
-                    <p className="mt-8 text-center text-sm text-slate-500">
-                        Already have an account?{' '}
-                        <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700">
-                            Sign in
-                        </Link>
-                    </p>
-                </div>
+                <Suspense fallback={<div className="animate-pulse">Loading...</div>}>
+                    <RegisterForm />
+                </Suspense>
             </div>
 
             {/* Right Panel - Features */}
@@ -201,7 +215,7 @@ export default function RegisterPage() {
 
                     <div className="mt-12 p-6 rounded-2xl bg-white/10 backdrop-blur-sm">
                         <p className="text-white/90 italic mb-4">
-                            "ColdReach helped us 3x our reply rates in just 2 weeks. The warm-up feature is a game changer."
+                            &quot;ColdReach helped us 3x our reply rates in just 2 weeks. The warm-up feature is a game changer.&quot;
                         </p>
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-violet-400 flex items-center justify-center text-white font-medium">
