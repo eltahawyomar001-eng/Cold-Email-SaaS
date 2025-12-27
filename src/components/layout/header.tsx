@@ -27,15 +27,16 @@ interface Workspace {
 interface HeaderProps {
     workspaces?: Workspace[];
     currentWorkspace?: Workspace | null;
+    isDemoMode?: boolean;
 }
 
-export function Header({ workspaces = [], currentWorkspace }: HeaderProps) {
+export function Header({ workspaces = [], currentWorkspace, isDemoMode = false }: HeaderProps) {
     const { data: session } = useSession();
     const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
 
     return (
-        <header className="fixed top-0 right-0 left-64 z-30 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-100">
+        <header className={`fixed right-0 left-64 z-30 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-100 ${isDemoMode ? 'top-10' : 'top-0'}`}>
             <div className="flex h-full items-center justify-between px-6">
                 {/* Search */}
                 <div className="flex-1 max-w-xl">

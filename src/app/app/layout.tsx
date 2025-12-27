@@ -53,16 +53,20 @@ export default async function AppLayout({
     return (
         <div className="min-h-screen bg-slate-50">
             {isDemoMode && (
-                <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-center py-1.5 text-sm font-medium">
-                    Demo Mode - This is a preview with simulated data
+                <div className="fixed top-0 left-0 right-0 z-[100] h-10 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium shadow-lg flex items-center justify-center">
+                    <span className="inline-flex items-center gap-2">
+                        <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        Demo Mode - This is a preview with simulated data
+                    </span>
                 </div>
             )}
-            <Sidebar />
+            <Sidebar isDemoMode={isDemoMode} />
             <Header
                 workspaces={workspaces}
                 currentWorkspace={currentWorkspace}
+                isDemoMode={isDemoMode}
             />
-            <main className={`ml-64 pt-16 min-h-screen ${isDemoMode ? 'mt-8' : ''}`}>
+            <main className={`ml-64 min-h-screen ${isDemoMode ? 'pt-[104px]' : 'pt-16'}`}>
                 <div className="p-6">
                     {children}
                 </div>

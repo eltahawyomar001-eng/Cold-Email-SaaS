@@ -34,11 +34,15 @@ const settingsNav = [
     { name: 'Billing', href: '/app/billing', icon: CreditCard },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+    isDemoMode?: boolean;
+}
+
+export function Sidebar({ isDemoMode = false }: SidebarProps) {
     const pathname = usePathname();
 
     return (
-        <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-white/80 backdrop-blur-xl border-r border-slate-100">
+        <aside className={`fixed left-0 z-40 h-screen w-64 bg-white/80 backdrop-blur-xl border-r border-slate-100 ${isDemoMode ? 'top-10' : 'top-0'}`}>
             {/* Logo */}
             <div className="flex h-16 items-center gap-3 px-6 border-b border-slate-100">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg shadow-blue-500/25">
