@@ -1,0 +1,469 @@
+// Prisma Schema for Cold Email SaaS MVP
+// Database: SQLite for demo purposes
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// AUTHENTICATION & USERS
+// =============================================================================
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  name           String?
+  avatarUrl      String?
+  emailVerified  DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  workspaceMembers WorkspaceMember[]
+  subscriptions    Subscription[]
+
+  @@index([email])
+}
+
+// =============================================================================
+// WORKSPACES & TEAM
+// =============================================================================
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members       WorkspaceMember[]
+  invites       Invite[]
+  leads         Lead[]
+  emailAccounts EmailAccount[]
+  campaigns     Campaign[]
+  threads       Thread[]
+  integrations  Integration[]
+  exportedSheets ExportedSheet[]
+  jobs          Job[]
+
+  @@index([slug])
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  role        String   @default("MEMBER") // OWNER, ADMIN, MEMBER
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model Invite {
+  id          String    @id @default(cuid())
+  email       String
+  role        String    @default("MEMBER") // ADMIN, MEMBER
+  token       String    @unique
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedById String?
+
+  @@index([token])
+  @@index([workspaceId])
+  @@index([email])
+}
+
+// =============================================================================
+// LEADS
+// =============================================================================
+
+model Lead {
+  id           String   @id @default(cuid())
+  email        String
+  firstName    String?
+  lastName     String?
+  company      String?
+  title        String?
+  phone        String?
+  linkedinUrl  String?
+  website      String?
+  tags         String   @default("[]") // JSON array of strings
+  customFields String   @default("{}") // JSON object
+  status       String   @default("ACTIVE") // ACTIVE, BOUNCED, UNSUBSCRIBED, COMPLAINED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  workspaceId   String
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaignLeads CampaignLead[]
+
+  @@unique([email, workspaceId])
+  @@index([workspaceId])
+  @@index([email])
+  @@index([status])
+}
+
+// =============================================================================
+// EMAIL ACCOUNTS
+// =============================================================================
+
+model EmailAccount {
+  id              String   @id @default(cuid())
+  name            String
+  email           String
+  provider        String   @default("SMTP") // SMTP, GMAIL, OUTLOOK
+  status          String   @default("PENDING") // PENDING, CONNECTED, DISCONNECTED, ERROR
+  
+  // SMTP Settings (stored as JSON for flexibility)
+  smtpHost        String?
+  smtpPort        Int?
+  smtpUser        String?
+  smtpPass        String?  // In demo, just a placeholder
+  imapHost        String?
+  imapPort        Int?
+  
+  // OAuth tokens (fake for demo)
+  accessToken     String?
+  refreshToken    String?
+  tokenExpiresAt  DateTime?
+  
+  // Sending limits
+  maxPerHour      Int      @default(20)
+  maxPerDay       Int      @default(100)
+  sentToday       Int      @default(0)
+  sentThisHour    Int      @default(0)
+  lastSentAt      DateTime?
+  lastHourReset   DateTime?
+  lastDayReset    DateTime?
+  
+  // Warmup settings
+  warmupEnabled   Boolean  @default(false)
+  warmupDay       Int      @default(1)
+  warmupMaxPerDay Int      @default(5)
+  
+  // Health metrics
+  healthScore     Int      @default(100) // 0-100
+  bounceRate      Float    @default(0)
+  spamRate        Float    @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  workspaceId     String
+  workspace       Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaigns       Campaign[]
+  threads         Thread[]
+  warmupSettings  WarmupSettings?
+
+  @@unique([email, workspaceId])
+  @@index([workspaceId])
+  @@index([status])
+}
+
+model WarmupSettings {
+  id              String   @id @default(cuid())
+  enabled         Boolean  @default(false)
+  currentDay      Int      @default(1)
+  dailyTarget     Int      @default(5)
+  rampIncrement   Int      @default(3)
+  maxDailyLimit   Int      @default(50)
+  sentToday       Int      @default(0)
+  lastResetAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  emailAccountId  String   @unique
+  emailAccount    EmailAccount @relation(fields: [emailAccountId], references: [id], onDelete: Cascade)
+}
+
+// =============================================================================
+// CAMPAIGNS & SEQUENCES
+// =============================================================================
+
+model Campaign {
+  id              String   @id @default(cuid())
+  name            String
+  status          String   @default("DRAFT") // DRAFT, ACTIVE, PAUSED, COMPLETED
+  
+  // Scheduling
+  timezone        String   @default("UTC")
+  sendingDays     String   @default("[1,2,3,4,5]") // JSON array: 0=Sun, 1=Mon, etc.
+  sendingStartHour Int     @default(9)
+  sendingEndHour  Int      @default(17)
+  
+  // Stop conditions
+  stopOnReply     Boolean  @default(true)
+  stopOnBounce    Boolean  @default(true)
+  
+  // Stats cache (updated periodically)
+  totalLeads      Int      @default(0)
+  sentCount       Int      @default(0)
+  deliveredCount  Int      @default(0)
+  openedCount     Int      @default(0)
+  clickedCount    Int      @default(0)
+  repliedCount    Int      @default(0)
+  bouncedCount    Int      @default(0)
+  
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  workspaceId     String
+  workspace       Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  emailAccountId  String?
+  emailAccount    EmailAccount?  @relation(fields: [emailAccountId], references: [id], onDelete: SetNull)
+  steps           SequenceStep[]
+  campaignLeads   CampaignLead[]
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([emailAccountId])
+}
+
+model SequenceStep {
+  id          String   @id @default(cuid())
+  order       Int      @default(1)
+  subject     String
+  body        String
+  
+  // Delay before sending this step
+  delayAmount Int      @default(0)
+  delayUnit   String   @default("days") // minutes, hours, days
+  
+  // Conditions
+  waitForOpen Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+}
+
+model CampaignLead {
+  id            String    @id @default(cuid())
+  status        String    @default("PENDING") // PENDING, ACTIVE, COMPLETED, REPLIED, BOUNCED, UNSUBSCRIBED
+  currentStep   Int       @default(0)
+  lastStepAt    DateTime?
+  nextStepAt    DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  campaignId    String
+  campaign      Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  leadId        String
+  lead          Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  emailEvents   EmailEvent[]
+
+  @@unique([campaignId, leadId])
+  @@index([campaignId])
+  @@index([leadId])
+  @@index([status])
+  @@index([nextStepAt])
+}
+
+// =============================================================================
+// EMAIL EVENTS & TRACKING
+// =============================================================================
+
+model EmailEvent {
+  id             String   @id @default(cuid())
+  type           String   // SENT, DELIVERED, OPENED, CLICKED, REPLIED, BOUNCED, SPAM, UNSUBSCRIBED
+  stepNumber     Int      @default(1)
+  metadata       String   @default("{}") // JSON: link clicked, bounce reason, etc.
+  occurredAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  // Relations
+  campaignLeadId String
+  campaignLead   CampaignLead @relation(fields: [campaignLeadId], references: [id], onDelete: Cascade)
+
+  @@index([campaignLeadId])
+  @@index([type])
+  @@index([occurredAt])
+}
+
+// =============================================================================
+// INBOX & THREADS
+// =============================================================================
+
+model Thread {
+  id            String   @id @default(cuid())
+  subject       String
+  status        String   @default("OPEN") // OPEN, REPLIED, CLOSED
+  category      String   @default("NEUTRAL") // INTERESTED, NOT_INTERESTED, OOO, BOUNCE, SPAM, NEUTRAL
+  isRead        Boolean  @default(false)
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Related entities
+  leadEmail       String
+  leadName        String?
+  campaignId      String?
+  campaignName    String?
+
+  // Relations
+  workspaceId     String
+  workspace       Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  emailAccountId  String
+  emailAccount    EmailAccount @relation(fields: [emailAccountId], references: [id], onDelete: Cascade)
+  messages        Message[]
+
+  @@index([workspaceId])
+  @@index([emailAccountId])
+  @@index([status])
+  @@index([category])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  direction   String   // INBOUND, OUTBOUND
+  fromEmail   String
+  fromName    String?
+  toEmail     String
+  toName      String?
+  subject     String
+  body        String
+  htmlBody    String?
+  isRead      Boolean  @default(false)
+  sentAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  // Relations
+  threadId    String
+  thread      Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@index([direction])
+  @@index([sentAt])
+}
+
+// =============================================================================
+// BACKGROUND JOBS
+// =============================================================================
+
+model Job {
+  id          String    @id @default(cuid())
+  type        String    // CAMPAIGN_TICK, SEND_EMAIL_STEP, GENERATE_REPLY, WARMUP_TICK, STATS_ROLLUP
+  status      String    @default("PENDING") // PENDING, IN_PROGRESS, DONE, FAILED
+  payload     String    @default("{}") // JSON
+  result      String?   // JSON
+  error       String?
+  retries     Int       @default(0)
+  maxRetries  Int       @default(3)
+  runAt       DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([status, runAt])
+  @@index([type])
+  @@index([workspaceId])
+}
+
+// =============================================================================
+// BILLING & SUBSCRIPTIONS
+// =============================================================================
+
+model Subscription {
+  id              String    @id @default(cuid())
+  plan            String    @default("FREE") // FREE, STARTER, PRO
+  status          String    @default("ACTIVE") // ACTIVE, CANCELED, PAST_DUE
+  
+  // Simulated Stripe data
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  
+  // Billing period
+  currentPeriodStart   DateTime  @default(now())
+  currentPeriodEnd     DateTime?
+  canceledAt           DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([plan])
+  @@index([status])
+}
+
+// =============================================================================
+// INTEGRATIONS
+// =============================================================================
+
+model Integration {
+  id          String   @id @default(cuid())
+  type        String   // GOOGLE_SHEETS, ZAPIER, HUBSPOT, etc.
+  name        String
+  status      String   @default("CONNECTED") // CONNECTED, DISCONNECTED, ERROR
+  config      String   @default("{}") // JSON configuration
+  accessToken String?  // Fake token for demo
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([type])
+}
+
+model ExportedSheet {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // LEADS, CAMPAIGN_STATS, INBOX
+  data        String   @default("[]") // JSON array of rows
+  rowCount    Int      @default(0)
+  exportedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  // Relations
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([type])
+}
